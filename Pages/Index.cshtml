@@ -1,0 +1,156 @@
+﻿@page
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Home";
+}
+
+<style>
+    /* Page-scoped styles for the game - kept small and local */
+    #game {
+        width: 500px;
+        height: 450px;
+        background: #dfffd8;
+        border: 4px solid #333;
+        position: relative;
+        overflow: hidden;
+        margin: 3rem auto;
+    }
+
+    /* Frog */
+    #frog {
+        position: absolute;
+        font-size: 40px;
+        width: 40px;
+        height: 40px;
+        left: 230px;
+        top: 400px; /* Start at the bottom */
+        text-align: center;
+        line-height: 40px;
+    }
+
+    /* Cars */
+    .car {
+        position: absolute;
+        width: 70px;
+        height: 40px;
+        background: #ff5959;
+        border-radius: 8px;
+    }
+
+    /* make page background subtle and centered */
+    .home-page {
+        background: #eef;
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+</style>
+
+<div class="home-page">
+    <div id="game">
+        <div id="frog">🐸</div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const game = document.getElementById("game");
+            const frog = document.getElementById("frog");
+
+            // Frog starting position
+            let frogX = 230;
+            let frogY = 400;
+
+            // Traffic lanes (Y positions)
+            const lanes = [70, 140, 210, 280, 350];
+
+            // Create moving cars
+            const cars = [];
+            lanes.forEach((laneY, i) => {
+                let car = document.createElement("div");
+                car.classList.add("car");
+                car.style.top = laneY + "px";
+
+                // Alternate directions
+                if (i % 2 === 0) {
+                    car.style.left = "-100px";
+                    car.speed = 2 + i; // left → right
+                } else {
+                    car.style.left = "520px";
+                    car.speed = -(2 + i); // right → left
+                }
+
+                game.appendChild(car);
+                cars.push(car);
+            });
+
+            function moveCars() {
+                cars.forEach(car => {
+                    let x = parseInt(car.style.left);
+                    x += car.speed;
+
+                    // Reset when off-screen
+                    if (x > 550) x = -100;
+                    if (x < -120) x = 520;
+
+                    car.style.left = x + "px";
+
+                    checkCollision(car);
+                });
+
+                requestAnimationFrame(moveCars);
+            }
+
+            moveCars();
+
+            function checkCollision(car) {
+                let cx = parseInt(car.style.left);
+                let cy = parseInt(car.style.top);
+
+                if (
+                    frogX < cx + 70 &&
+                    frogX + 40 > cx &&
+                    frogY < cy + 40 &&
+                    frogY + 40 > cy
+                ) {
+                    alert("💥 The frog got hit!");
+                    resetFrog();
+                }
+            }
+
+            function resetFrog() {
+                frogX = 230;
+                frogY = 400;
+                updateFrog();
+            }
+
+            function updateFrog() {
+                frog.style.left = frogX + "px";
+                frog.style.top = frogY + "px";
+
+                // Win condition
+                if (frogY < 20) {
+                    alert("🎉 The frog made it safely across!");
+                    resetFrog();
+                }
+            }
+
+            document.addEventListener("keydown", e => {
+                if (e.key === "ArrowUp") frogY -= 30;
+                if (e.key === "ArrowDown") frogY += 30;
+                if (e.key === "ArrowLeft") frogX -= 30;
+                if (e.key === "ArrowRight") frogX += 30;
+
+                // Boundaries
+                if (frogX < 0) frogX = 0;
+                if (frogX > 460) frogX = 460;
+                if (frogY > 410) frogY = 410;
+
+                updateFrog();
+            });
+        })();
+    </script>
+}
